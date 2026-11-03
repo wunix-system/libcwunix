@@ -8,5 +8,6 @@
 
 #include <wunix/syscall.h>
 #include <wunix/syslib.h>
+#include <wunix/registry.h>
 
 #endif /* _WUNIX_H */

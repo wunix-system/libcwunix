@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# libcwunix/wunix-cc — Автономный компилятор C для Wunix OS
+set -e
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INCDIR="$DIR/include"
+LIBDIR="$DIR/lib"
+
+if [ ! -d "$INCDIR" ] || [ ! -d "$LIBDIR" ]; then
+    echo "Ошибка: не найдены каталоги include или lib библиотеки libcwunix в $DIR" >&2
+    exit 1
+fi
+
+exec gcc -nostdinc -isystem "$INCDIR" -nostdlib -static \
+    "$LIBDIR/crt1.o" "$LIBDIR/crti.o" \
+    "$@" \
+    -L"$LIBDIR" -lcwunix -lgcc \
+    "$LIBDIR/crtn.o"

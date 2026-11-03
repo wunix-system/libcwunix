@@ -9,7 +9,7 @@ SRCDIR := src
 
 CFLAGS ?= -O2 -Wall -Wextra -fno-stack-protector -nostdinc -isystem $(INCDIR)
 
-OBJS := $(SRCDIR)/wunix_syslib.o
+OBJS := $(SRCDIR)/wunix_syslib.o $(SRCDIR)/wunix_registry.o
 
 all: $(LIBDIR)/libcwunix.a
 

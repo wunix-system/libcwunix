@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# libcwunix/wunix-cc — Автономный компилятор C для Wunix OS
+# libcwunix/wunix-cc — Автономный компилятор C для Wunix OS с поддержкой динамических и статических сборок
 set -e
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -11,8 +11,43 @@ if [ ! -d "$INCDIR" ] || [ ! -d "$LIBDIR" ]; then
     exit 1
 fi
 
-exec gcc -nostdinc -isystem "$INCDIR" -nostdlib -static \
-    "$LIBDIR/crt1.o" "$LIBDIR/crti.o" \
-    "$@" \
-    -L"$LIBDIR" -lcwunix -lgcc \
-    "$LIBDIR/crtn.o"
+IS_STATIC=0
+IS_SHARED=0
+IS_COMPILE_ONLY=0
+
+for arg in "$@"; do
+    case "$arg" in
+        -static)
+            IS_STATIC=1
+            ;;
+        -shared)
+            IS_SHARED=1
+            ;;
+        -c|-S|-E)
+            IS_COMPILE_ONLY=1
+            ;;
+    esac
+done
+
+if [ "$IS_COMPILE_ONLY" -eq 1 ]; then
+    exec gcc -nostdinc -isystem "$INCDIR" "$@"
+elif [ "$IS_SHARED" -eq 1 ]; then
+    exec gcc -shared -fPIC -nostdinc -isystem "$INCDIR" -nostdlib \
+        "$@" \
+        -L"$LIBDIR" -lcwunix -lgcc
+elif [ "$IS_STATIC" -eq 1 ]; then
+    exec gcc -nostdinc -isystem "$INCDIR" -nostdlib -static \
+        "$LIBDIR/crt1.o" "$LIBDIR/crti.o" \
+        "$@" \
+        -L"$LIBDIR" -lcwunix -lgcc \
+        "$LIBDIR/crtn.o"
+else
+    # По умолчанию — полноценная динамическая сборка (PIE + PT_INTERP + NEEDED libcwunix.so)
+    exec gcc -nostdinc -isystem "$INCDIR" -nostdlib -fPIC -pie \
+        -Wl,--dynamic-linker,/lib/ld-linux-x86-64.so.2 \
+        -Wl,-rpath,/lib:/usr/lib \
+        "$LIBDIR/Scrt1.o" "$LIBDIR/crti.o" \
+        "$@" \
+        -L"$LIBDIR" -lcwunix -lgcc \
+        "$LIBDIR/crtn.o"
+fi

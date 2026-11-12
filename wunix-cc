@@ -11,7 +11,7 @@ if [ ! -d "$INCDIR" ] || [ ! -d "$LIBDIR" ]; then
     exit 1
 fi
 
-IS_STATIC=0
+IS_STATIC=1
 IS_SHARED=0
 IS_COMPILE_ONLY=0
 
@@ -20,8 +20,12 @@ for arg in "$@"; do
         -static)
             IS_STATIC=1
             ;;
+        -dynamic|--dynamic|-rdynamic)
+            IS_STATIC=0
+            ;;
         -shared)
             IS_SHARED=1
+            IS_STATIC=0
             ;;
         -c|-S|-E)
             IS_COMPILE_ONLY=1
